@@ -1,12 +1,8 @@
-# YouTube Summaries
+# YouTube AI Summaries
 
-YouTube Summaries is a tool that uses OpenAI's Whisper and GPT summarization algorithms to create concise summaries of YouTube videos. This tool is built using Python 3.10 and Streamlit, and it requires an OpenAI API key and the youtube_dl and streamlit libraries to run.
+YouTube AI Summaries is a tool that uses OpenAI's Whisper and GPT summarization algorithms to create concise summaries of YouTube videos. This tool is built using Streamlit and it requires an OpenAI API key to run.
 
 ## Installation
-
-To use YouTube Summaries, you must first install Python 3.10 on your system. You can download Python from the official website: <https://www.python.org/downloads/>
-
-Once you have Python installed, you can install the required packages using pip:
 
 ```sh
 pip install openai yt-dlp streamlit
