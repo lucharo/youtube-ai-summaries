@@ -1,2 +1,2 @@
 run:
-	streamlit run ⚙️_App.py
+	streamlit run ⚙️_App.py --logger.level debug
