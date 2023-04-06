@@ -93,7 +93,7 @@ def get_transcript(video_id):
             ydl.download([f"https://www.youtube.com/watch?v={video_id}"])
             info = ydl.extract_info(f"https://www.youtube.com/watch?v={video_id}", download=False)
             duration = info["duration"]
-            multiplier = 1 + duration // (60*5) + 1
+            multiplier = duration // (60*5)
             title = info["title"]
 
     # Perform transcription or subtitle extraction

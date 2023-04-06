@@ -91,7 +91,7 @@ def app():
                                     "content": (
                                         "You are a helpful assistant that"
                                         " summarises youtube video transcripts into "
-                                        f"{300 * multiplier} words or less {translation_instruction} "
+                                        f"{300 * (1 + multiplier)} words or less {translation_instruction} "
                                         )
                                 },
                                 {"role": "user", "content": transcript}
