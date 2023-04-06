@@ -70,29 +70,37 @@ def app():
         else:
             transcript, multiplier, title = get_transcript(video_id)
 
+            token_count = count_tokens(transcript)
+            st.write(f"Token count: {token_count}")
+
             with st.expander("Expand to see transcript"):
                 st.text_area('Transcript', transcript)
 
-            # Summarize transcription using OpenAI GPT API
-            with st.spinner("Summarising transcript..."):
-                translation_instruction = 'in their original language' if summary_language == "Video's original language" else "in english"
-                summary = openai.ChatCompletion.create(
-                    model="gpt-3.5-turbo",
-                    messages=[
-                            {
-                                "role": "system",
-                                "content": (
-                                    "You are a helpful assistant that"
-                                    " summarises youtube video transcripts into "
-                                    f"{300 * multiplier} words or less {translation_instruction} "
-                                    )
-                            },
-                            {"role": "user", "content": transcript}
-                        ]
-                )
+            if token_count > 4000:
+                st.error('The transcript has more than 4000 tokens and cannot be summarized.')
+                summary = "The transcript has more than 4000 tokens and cannot be summarized.'"
+            else:
+                # Summarize transcription using OpenAI GPT API
+                with st.spinner("Summarising transcript..."):
+                    translation_instruction = 'in their original language' if summary_language == "Video's original language" else "in english"
+                    summary = openai.ChatCompletion.create(
+                        model="gpt-3.5-turbo",
+                        messages=[
+                                {
+                                    "role": "system",
+                                    "content": (
+                                        "You are a helpful assistant that"
+                                        " summarises youtube video transcripts into "
+                                        f"{300 * multiplier} words or less {translation_instruction} "
+                                        )
+                                },
+                                {"role": "user", "content": transcript}
+                            ]
+                    )
+                    summary = summary.choices[0]["message"]["content"]
 
-            # Display summary
-            st.write("Summary:", summary.choices[0]["message"]["content"])
+                    # Display summary
+                    st.write("Summary:", summary)
 
             # store output in session_state 
             st.session_state.history.append(
@@ -100,7 +108,7 @@ def app():
                     "url": youtube_url,
                     "title": title,
                     "transcript": transcript,
-                    "summary": summary.choices[0]["message"]["content"],
+                    "summary": summary,
                 }
             )
 
@@ -113,8 +121,12 @@ if __name__ == "__main__":
     if 'history' not in st.session_state:
         st.session_state.history = []
 
+    st.sidebar.warning("⚠️ If the transcript is longer than 4097 tokens the summarization won't work as this is GPT-3.5-turbo's maximum context size 😢")
+
     with open('pages/sidebar.md', 'r') as sidebar_md:
         st.sidebar.markdown(sidebar_md.read())
+
+
 
     login()
 

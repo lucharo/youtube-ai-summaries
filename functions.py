@@ -8,6 +8,13 @@ import openai
 import streamlit as st
 import yt_dlp as youtube_dl
 
+import tiktoken
+from tiktoken import encoding_for_model
+
+def count_tokens(text: str) -> int:
+    encoding = tiktoken.encoding_for_model("gpt-3.5-turbo")
+    tokens = encoding.encode(text)
+    return len(tokens)
 
 def split_audio(audio_file, max_file_size):
     audio = pydub.AudioSegment.from_file(audio_file)
