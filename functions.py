@@ -2,7 +2,6 @@
 import os
 import re
 import tempfile
-import av
 import pydub
 import openai
 import streamlit as st
@@ -21,31 +20,6 @@ def split_audio(audio_file, max_file_size):
         keep_silence=100, 
         num_chunks=num_chunks)
 
-def split_audio_av(audio_file, max_file_size):
-    container = av.open(audio_file)
-    audio_stream = next(s for s in container.streams if s.type == 'audio')
-    duration = int(audio_stream.duration * audio_stream.time_base)
-    max_duration = max_file_size * (duration / os.path.getsize(audio_file))
-    num_chunks = duration // max_duration + 1
-
-    audio_chunks = []
-    current_chunk = av.AudioFrame()
-    current_duration = 0
-
-    for frame in container.decode(audio_stream):
-        current_chunk.extend(frame)
-        current_duration += int(frame.duration * audio_stream.time_base)
-
-        if current_duration >= max_duration:
-            audio_chunks.append(current_chunk)
-            current_chunk = av.AudioFrame()
-            current_duration = 0
-
-    if current_chunk:
-        audio_chunks.append(current_chunk)
-
-    return audio_chunks
-
 def concatenate_transcripts(transcript_list):
     transcript = " ".join(transcript_list)
     return transcript.strip()
@@ -55,7 +29,7 @@ def transcribe_audio_file(audio_file):
     file_size = os.path.getsize(audio_file)
 
     if file_size > MAX_FILE_SIZE:
-        audio_chunks = split_audio_av(audio_file, MAX_FILE_SIZE)
+        audio_chunks = split_audio(audio_file, MAX_FILE_SIZE)
         transcript_list = []
         for chunk in audio_chunks:
             with tempfile.NamedTemporaryFile(suffix=".webm") as temp_audio:

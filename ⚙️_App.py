@@ -42,7 +42,7 @@ def app():
         "Spanish long example": "https://www.youtube.com/watch?v=BjzxheRM7jk"
     }
     
-    cols = st.columns([1,4.5])
+    cols = st.columns([1,1,5])
     for i, (name, url) in enumerate(example_videos.items()):
         if cols[i].button(name):
             st.session_state.example_url = url
