@@ -39,6 +39,7 @@ def app():
     example_videos = {
         "English example": "https://www.youtube.com/watch?v=Dmpnrtey3YU",
         "French example": "https://www.youtube.com/watch?v=KD3n7f3HnbE",
+        "Spanish long example": "https://www.youtube.com/watch?v=BjzxheRM7jk"
     }
     
     cols = st.columns([1,4.5])
