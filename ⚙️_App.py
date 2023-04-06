@@ -121,7 +121,7 @@ if __name__ == "__main__":
     if 'history' not in st.session_state:
         st.session_state.history = []
 
-    st.sidebar.warning("⚠️ If the transcript is longer than 4097 tokens the summarization won't work as this is GPT-3.5-turbo's maximum context size 😢")
+    st.sidebar.warning("⚠️ If the transcript is longer than 4097 tokens (roughly a 10-20 minute video) the summarization won't work as this is GPT-3.5-turbo's maximum context size 😢")
 
     with open('pages/sidebar.md', 'r') as sidebar_md:
         st.sidebar.markdown(sidebar_md.read())
