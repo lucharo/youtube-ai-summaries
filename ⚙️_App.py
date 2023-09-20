@@ -3,36 +3,7 @@ import streamlit as st
 import openai
 
 from functions import *
-
-def display_bmc_button():
-    st.write(
-        """
-        <style>
-            .bmc-container {
-                display: flex;
-                align-items: center;
-                justify-content: center;
-                margin-right: 1rem;
-                }
-            .github-logo {
-                width: 40px;
-                height: 40px;
-                margin-left: 1rem;
-            }
-        </style>
-        <div class="bmc-container">
-            <a href="https://www.buymeacoffee.com/lucharo" target="_blank" title="Donate to support the project">
-                <img src="https://cdn.buymeacoffee.com/buttons/v2/default-yellow.png"  alt="Buy Me A Coffee" width="200">
-            </a>
-            <a href="https://github.com/lucharo/youtube-ai-summaries" target="_blank" title="Check out the GitHub repository">
-                <svg class="github-logo" viewBox="0 0 16 16" version="1.1" width="30" height="30" aria-hidden="true">
-                    <path fill-rule="evenodd" d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"></path>
-                </svg>            
-            </a>
-        </div>
-        """,
-        unsafe_allow_html=True,
-    )
+# from localstorage import *
 
 def login():
     if 'openai_key' not in st.session_state or 'api_key_valid' not in st.session_state:
@@ -62,17 +33,14 @@ def app():
     # display_auth_banner()
     st.title("YouTube Audio Transcription and Summarization")
 
-    st.subheader("This tool summarises youtube videos of whatever length into 300 words"
-                 " for every 5 minutes of video. \n"
-                 "> On average it takes a human 1 minute to read 300 words.")
+    st.subheader("This tool transcribes and summarises YouTube videos into a length of your choice.")
 
     example_videos = {
         "English example": "https://www.youtube.com/watch?v=Dmpnrtey3YU",
         "French example": "https://www.youtube.com/watch?v=KD3n7f3HnbE",
-        "Spanish long example": "https://www.youtube.com/watch?v=BjzxheRM7jk"
     }
     
-    cols = st.columns([1,1,5])
+    cols = st.columns([1,6])
     for i, (name, url) in enumerate(example_videos.items()):
         if cols[i].button(name):
             st.session_state.example_url = url
@@ -87,6 +55,21 @@ def app():
         ("English", "Video's original language"),
         horizontal= True
         )
+    
+    summary_length = st.radio(
+        "Select summary length",
+        ("Very Short (100 words)", "Short (400 words)", "Medium (800 words)", "Long (1200 words)"),
+        horizontal=True
+    )
+
+    length_map = {
+        "Very Short (100 words)": 100,
+        "Short (400 words)": 400,
+        "Medium (800 words)": 800,
+        "Long (1200 words)": 1200,
+    }
+    chosen_length = length_map[summary_length]
+
 
     video_id = extract_video_id(youtube_url)
     if video_id:
@@ -116,16 +99,16 @@ def app():
                     summary = openai.ChatCompletion.create(
                         model="gpt-3.5-turbo",
                         messages=[
-                                {
-                                    "role": "system",
-                                    "content": (
-                                        "You are a helpful assistant that"
-                                        " summarises youtube video transcripts into "
-                                        f"{300 * (1 + multiplier)} words or less {translation_instruction} "
-                                        )
-                                },
-                                {"role": "user", "content": transcript}
-                            ]
+                            {
+                                "role": "system",
+                                "content": (
+                                    "You are a helpful assistant that"
+                                    f" summarises youtube video transcripts into roughly {chosen_length} words"
+                                    f" {translation_instruction}"
+                                )
+                            },
+                            {"role": "user", "content": transcript},
+                        ],
                     )
                     summary = summary.choices[0]["message"]["content"]
 
@@ -133,14 +116,35 @@ def app():
                     st.write("Summary:", summary)
 
             # store output in session_state 
-            st.session_state.history.append(
-                {
-                    "url": youtube_url,
-                    "title": title,
-                    "transcript": transcript,
-                    "summary": summary,
-                }
-            )
+            title_exists = False
+
+            for entry in st.session_state.history:
+                if entry["title"] == title:
+                    title_exists = True
+                    entry["summaries"][summary_length] = {
+                        "id": f"{title}_{summary_length}_{summary_language}",
+                        "summary_length": summary_length,
+                        "summary": summary,
+                    }
+                    break
+
+            if not title_exists:
+                new_entry = {
+                        "title": title,
+                        "url": youtube_url,
+                        "transcript": transcript,
+                        "summaries": {
+                            summary_length: {
+                                "id": f"{title}_{summary_length}_{summary_language}",
+                                "summary_length": summary_length,
+                                "summary": summary,
+                            }
+                        }
+                    }
+                st.session_state.history.append(new_entry)
+            
+            # save_data('youtube-ai-summaries-history-cache', st.session_state.history)
+
 
 if __name__ == "__main__":
     st.set_page_config(

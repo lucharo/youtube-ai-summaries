@@ -1,20 +1,44 @@
 import streamlit as st
 
+# from localstorage import *
+
 st.markdown("# History 📜")
 
-history = st.session_state.history
+history_cache = [] # or load_data('youtube-ai-summaries-history-cache')
+# if len(history_cache) > 1:
+#     if st.button("Clear local cache 🗑️"):
+#         clear_storage()
+
+if 'history' in st.session_state:
+    history = st.session_state.history + history_cache
+else: 
+    history = history_cache
+
+st.write(history_cache)
 if len(history) > 0:
-    history_options = [f"{entry['title']}" for entry in history]
-    selected_history_entry = st.selectbox("Select a video:", history_options, index=len(history_options) - 1)
-    entry_index = history_options.index(selected_history_entry)
-    entry = history[entry_index]
+    title_options = [entry["title"] for entry in history]
+    selected_title = st.selectbox("Select a video:", title_options, index=len(title_options) - 1)
+    
+    title_entry = None
+    for entry in history:
+        if entry["title"] == selected_title:
+            title_entry = entry
+            break
 
     st.markdown(f'### {entry["title"]}')
     st.markdown(f"**URL:** {entry['url']}")
     with st.expander(f"Expand to see transcript"):
         st.write(entry["transcript"])
-    st.markdown(f"**Summary:**")
-    st.write(entry["summary"])
+
+    summary_length_options = list(title_entry["summaries"].keys())
+    if len(summary_length_options) > 1:
+        selected_summary_length = st.selectbox("Select summary length:", summary_length_options, index=0)
+        st.markdown(f"**Summary:**")
+    else:
+        selected_summary_length = summary_length_options[0]
+        st.markdown(f"**Summary - {selected_summary_length}:**")
+
+    st.write(entry["summaries"][selected_summary_length]["summary"])
 else:
     st.write("No history available.")
 
